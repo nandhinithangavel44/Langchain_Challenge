@@ -43,4 +43,96 @@ def cosine_similarity_manual(v1: list, v2: list) -> float:
         return 0.0
     return dot_product / (magnitude_v1 * magnitude_v2)
 
+def cosine_similarity_numpy(v1: list, v2: list) -> float:
+    """Computes cosine similarity using numpy."""
+    v1 = np.array(v1)
+    v2 = np.array(v2)
+    return float(
+        np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+    )
+
+from langchain_openai import OpenAIEmbeddings
+def compare_word_pairs() -> dict:
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    dog = embeddings.embed_query("dog")
+    puppy = embeddings.embed_query("puppy")
+    automobile = embeddings.embed_query("automobile")
+    sim_dog_puppy = cosine_similarity_numpy(dog, puppy)
+    sim_dog_auto = cosine_similarity_numpy(dog, automobile)
+    return {
+        "dog_vs_puppy": sim_dog_puppy,
+        "dog_vs_automobile": sim_dog_auto,
+        "more_similar_pair": (
+            "dog vs puppy"
+            if sim_dog_puppy > sim_dog_auto
+            else "dog vs automobile"
+        ),
+    }
+
+"""
+TASK 7: Batch Embedding with Chunking
+----------------------------------------
+Given a long text document, split it into overlapping chunks
+using RecursiveCharacterTextSplitter, then embed all chunks
+in a single batch call.  Return:
+  {
+    "num_chunks"   : int,
+    "chunk_size"   : int,   # configured chunk size
+    "overlap"      : int,   # configured overlap
+    "embedding_dim": int,
+    "chunks"       : list[str]
+  }
+
+Use chunk_size=200, chunk_overlap=40.
+
+HINT:
+  from langchain.text_splitter import RecursiveCharacterTextSplitter
+  splitter = RecursiveCharacterTextSplitter(
+      chunk_size=200, chunk_overlap=40
+  )
+  chunks = splitter.split_text(long_text)
+  vectors = embeddings.embed_documents(chunks)
+"""
+
+SAMPLE_DOCUMENT = """
+LangChain is a framework for developing applications powered by language models.
+It provides tools for prompt management, chains, agents, and memory.
+LangChain integrates with many LLM providers including OpenAI, Anthropic, and Cohere.
+The framework also supports vector stores, document loaders, and output parsers.
+RAG (Retrieval-Augmented Generation) is a technique that enhances LLM responses
+by fetching relevant documents from a knowledge base at query time.
+pgvector is a PostgreSQL extension that enables efficient storage and similarity
+search of high-dimensional vector embeddings directly inside a relational database.
+LangSmith is an observability platform for LangChain applications that provides
+tracing, evaluation, and debugging of LLM pipelines.
+"""
+
+from langchain_text_splitters import RecursiveCharacterTextSplitter
+from langchain_openai import OpenAIEmbeddings
+
+def batch_embed_with_chunks(
+    text: str,
+    chunk_size: int,
+    overlap: int
+) -> dict:
+    splitter = RecursiveCharacterTextSplitter(
+        chunk_size=chunk_size,
+        chunk_overlap=overlap
+    )
+
+    chunks = splitter.split_text(text)
+
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    vectors = embeddings.embed_documents(chunks)
+
+    return {
+        "num_chunks": len(chunks),
+        "chunk_size": chunk_size,
+        "overlap": overlap,
+        "embedding_dim": len(vectors[0]),
+        "chunks": chunks
+    }
+
+
+
 
