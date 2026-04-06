@@ -82,3 +82,7 @@ def rag_agent(question: str) -> str:
 
 
     raise ValueError("Agent did not return a valid response")
+
+print("\n[Task 17] RAG Agent")
+agent_ans = rag_agent("What distance metrics does pgvector support?")
+print(" ", agent_ans)
