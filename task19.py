@@ -61,3 +61,7 @@ def create_langsmith_dataset():
 
 
     return dataset.id
+
+print("\n[Task 19] Create LangSmith Dataset")
+dataset_id = create_langsmith_dataset()
+print(f"  Dataset ID: {dataset_id}")

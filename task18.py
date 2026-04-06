@@ -27,7 +27,10 @@ HINT:
 
 import os
 from langchain_core.tracers.context import collect_runs
+from langchain_openai import ChatOpenAI, OpenAIEmbeddings
+from dotenv import load_dotenv
 
+load_dotenv()
 
 def traced_chain(topic: str) -> dict:
     os.environ["LANGCHAIN_TRACING_V2"] = "true"
@@ -45,3 +48,8 @@ def traced_chain(topic: str) -> dict:
 
     run_id = str(cb.traced_runs[0].id)
     return {"answer": answer, "run_id": run_id}
+
+print("[Task 18] Traced Chain")
+traced = traced_chain("embeddings")
+print(f"  Answer : {str(traced.get('answer', ''))[:80]}")
+print(f"  Run ID : {traced.get('run_id')}")

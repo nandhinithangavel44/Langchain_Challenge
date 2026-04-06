@@ -119,3 +119,8 @@ def conversational_rag(documents: list) -> list:
 
 
     return [answer_1, answer_2]
+
+print("\n[Task 16] Conversational RAG")
+conv_answers = conversational_rag(RAG_DOCUMENTS)
+print("  Turn 1:", conv_answers[0][:80] if conv_answers else "")
+print("  Turn 2:", conv_answers[1][:80] if len(conv_answers) > 1 else "")
