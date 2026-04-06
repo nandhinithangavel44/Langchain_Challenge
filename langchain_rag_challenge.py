@@ -43,4 +43,30 @@ def cosine_similarity_manual(v1: list, v2: list) -> float:
         return 0.0
     return dot_product / (magnitude_v1 * magnitude_v2)
 
+def cosine_similarity_numpy(v1: list, v2: list) -> float:
+    """Computes cosine similarity using numpy."""
+    v1 = np.array(v1)
+    v2 = np.array(v2)
+    return float(
+        np.dot(v1, v2) / (np.linalg.norm(v1) * np.linalg.norm(v2))
+    )
+
+from langchain_openai import OpenAIEmbeddings
+def compare_word_pairs() -> dict:
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    dog = embeddings.embed_query("dog")
+    puppy = embeddings.embed_query("puppy")
+    automobile = embeddings.embed_query("automobile")
+    sim_dog_puppy = cosine_similarity_numpy(dog, puppy)
+    sim_dog_auto = cosine_similarity_numpy(dog, automobile)
+    return {
+        "dog_vs_puppy": sim_dog_puppy,
+        "dog_vs_automobile": sim_dog_auto,
+        "more_similar_pair": (
+            "dog vs puppy"
+            if sim_dog_puppy > sim_dog_auto
+            else "dog vs automobile"
+        ),
+    }
+
 
