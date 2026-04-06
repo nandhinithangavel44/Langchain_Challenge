@@ -261,6 +261,74 @@ def basic_rag_pipeline(documents: list, question: str) -> str:
 
     return chain.invoke(question)
    
+"""
+TASK 15: RAG with Source Attribution
+---------------------------------------
+Extend the RAG pipeline to also return the source documents
+used to generate the answer.  Return a dict:
+  {
+    "answer" : str,
+    "sources": [{"content": str, "score": float}, ...]
+  }
 
+
+HINT:
+  Use RunnableParallel to run retrieval and generation
+  in parallel, or retrieve docs first and pass them to both
+  the formatter and the chain:
+
+
+  from langchain_core.runnables import RunnableParallel, RunnablePassthrough
+
+
+  retrieval_chain = RunnableParallel(
+      {"context": retriever, "question": RunnablePassthrough()}
+  )
+  # Then use the context in both the answer chain and as sources.
+"""
+from langchain_core.runnables import RunnableParallel
+
+def rag_with_sources(documents: list, question: str) -> dict:
+    embeddings = OpenAIEmbeddings(model="text-embedding-3-small")
+    docs = [Document(page_content=d) for d in documents]
+
+    store = PGVector.from_documents(
+        documents=docs,
+        embedding=embeddings,
+        collection_name="rag_sources",
+        connection_string=os.environ["PG_CONNECTION_STRING_RAW"],
+    )
+
+    retriever = store.as_retriever(search_kwargs={"k": 3})
+
+    def format_docs(docs):
+        return "\n\n".join(doc.page_content for doc in docs)
+
+    prompt = ChatPromptTemplate.from_template(
+        "Answer using only this context:\n{context}\n\nQuestion: {question}"
+    )
+
+    llm = ChatOpenAI(model="gpt-4o-mini", temperature=0)
+
+    generation_chain = (
+        {"context": lambda x: format_docs(x["context"]), "question": lambda x: x["question"]}
+        | prompt
+        | llm
+        | StrOutputParser()
+    )
+
+    retrieval_chain = RunnableParallel(
+        {"context": retriever, "question": RunnablePassthrough()}
+    )
+
+    inputs = retrieval_chain.invoke(question)
+    answer = generation_chain.invoke(inputs)
+
+    sources = [
+        {"content": doc.page_content}
+        for doc in inputs["context"]
+    ]
+
+    return {"answer": answer, "sources": sources}
 
 
